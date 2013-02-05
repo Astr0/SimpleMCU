@@ -13,25 +13,32 @@ namespace smcu
 {
 	namespace io
 	{
-		namespace priv
+		namespace types
 		{
-			template<class TPIN>
+			template<class TPin>
 			class StaticInvertedPin
 			{
-				private:
-				typedef TPIN Pin;
+				static_assert(!TPin::IsInverted(), "Don't invert static inverted pins... This kills compilation time...");
+				typedef TPin Pin;
 			
 				public:
-				constexpr StaticInvertedPin()
-				{				
-				}
-			
 				typedef typename Pin::PortType PortType;
-				static constexpr PortType* Port() {return nullptr;}
-				static constexpr uint8_t Number() {return Pin::Number();}
+				typedef typename Pin::PinNumberType PinNumberType;
+				typedef typename Pin::PinMaskType PinMaskType;
+				typedef StaticInvertedPin<Pin> PinType;
+				typedef Pin NotInvertedType;
+
+				constexpr StaticInvertedPin()
+				{
+				}
+
 				static constexpr bool IsStatic(){return true;}
-				static constexpr bool Inverted(){return !Pin::Inverted();}
-				static constexpr typename PortType::DataType Mask() { return Pin::Mask();}
+				static constexpr bool IsInverted(){return !Pin::IsInverted();}
+				
+				static constexpr PortType Port() {return Pin::Port();}
+				static constexpr PinMaskType Mask() {return Pin::Mask();}
+				static constexpr PinNumberType Number() {return Pin::Number();}
+				static constexpr NotInvertedType NotInverted(){return Pin();}
 
 				static void Set()
 				{
@@ -56,16 +63,6 @@ namespace smcu
 				static bool Read()
 				{
 					return !Pin::Read();
-				}
-			
-				static void Refresh()
-				{
-					Pin::Refresh();
-				}
-			
-				static void Update()
-				{
-					Pin::Update();
 				}
 			};			
 		}

@@ -1,13 +1,14 @@
 /*
- * dynamicpin.h
+ * dynamicnumberpin.h
  *
- * Created: 04.02.2013 2:48:38
+ * Created: 02.02.2013 17:32:23
  *  Author: astr0
  */ 
 
+#pragma once
 
-#ifndef DYNAMICPIN_H_
-#define DYNAMICPIN_H_
+#ifndef DYNAMICNUMBERPIN_H_
+#define DYNAMICNUMBERPIN_H_
 
 #include "../../common/maskutils.h"
 
@@ -18,42 +19,39 @@ namespace smcu
 		namespace types
 		{
 			template<class TPort>
-			class DynamicPin
+			class DynamicNumberPin
 			{
-				static_assert(!TPort::IsStatic(), "Use DynamicNumberPin for max performance!");
 				public:
 				typedef TPort PortType;
 				typedef typename PortType::PinNumberType PinNumberType;
 				typedef typename PortType::PinMaskType PinMaskType;
-				typedef DynamicPin<TPort> PinType;
+				typedef DynamicNumberPin<TPort> PinType;
 				typedef PinType NotInvertedType;
 
 				private:
-				const PinMaskType _mask;	
-				const PortType _port;			
-
+				const PinMaskType _mask;				
+				
 				public:
-				constexpr DynamicPin(const PortType port, const PinNumberType number):
-					_port(port), _mask(1 << number)
+				constexpr DynamicNumberPin(const PinNumberType number): _mask(1 << number)
 				{				
 				}
 			
 				static constexpr bool IsStatic(){return false;}
 				static constexpr bool IsInverted(){return false;}
 				
-				inline constexpr PortType Port()const {return _port;}
+				static constexpr PortType Port(){return PortType();}
 				inline constexpr PinMaskType Mask()const {return _mask;}
 				inline constexpr PinNumberType Number()const {return smcu::common::MaskToBit<PinNumberType, PinMaskType>(_mask);}
 				inline constexpr NotInvertedType NotInverted()const{return *this;}
 
 				inline void Set()const
 				{
-					Port().Set(Mask());
+					PortType::Set(Mask());
 				}
 			
 				inline void Clear()const
 				{
-					Port().Clear(Mask());
+					PortType::Clear(Mask());
 				}
 			
 				inline void Set(bool val)const
@@ -66,12 +64,12 @@ namespace smcu
 
 				inline void Toggle()const
 				{
-					Port().Toggle(Mask());
+					PortType::Toggle(Mask());
 				}
 
 				inline bool Read()const
 				{
-					return Port().Read(Mask());
+					return PortType::Read(Mask());
 				}
 			};				
 		}
@@ -81,4 +79,4 @@ namespace smcu
 
 
 
-#endif /* DYNAMICPIN_H_ */
+#endif /* DYNAMICNUMBERPIN_H_ */

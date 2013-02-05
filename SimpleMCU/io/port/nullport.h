@@ -9,45 +9,50 @@
 #ifndef NULLPORT_H_
 #define NULLPORT_H_
 
-#include "../pin/pin.h"
-#include "../impl/portcontroller.h"
+#include "portbase.h"
+#include "../pin.h"
 
 namespace smcu
 {
 	namespace io
 	{
-		namespace priv
+		namespace types
 		{
-			class NullPort
+			class NullPort:public PortBase<uint8_t>
 			{
 				public:
 				constexpr NullPort(){}
+					
+				typedef NullPort PortType;
 				
-				typedef uint8_t DataType;
-				typedef NullPortController ControllerType;
-				
-				static constexpr uint8_t Width(){return 8 * sizeof(DataType);}
 				static constexpr bool IsStatic(){return true;}
-			
-				static constexpr NullPortController* Controller(){return nullptr;}
-			
+				
+				static constexpr PinNumberType Width(){return 8 * sizeof(DataType);}
+				static constexpr bool IsAutoUpdate(){return true;}
+				
 				static void Write(DataType value) {}
-				static void ClearAndSet(DataType clearMask, DataType setMask) {}
-				static void Set(DataType mask) {}
-				static void Clear(DataType mask) {}
-				static void Toggle(DataType mask) {}
-				static DataType Read() {return 0;}
+				static void ClearAndSet(MaskType clearMask, MaskType setMask) {}
+				static void Set(MaskType mask) {}
+				static void Clear(MaskType mask) {}
+				static void Toggle(MaskType mask) {}
+				static constexpr DataType Read() {return 0;}
+				static constexpr bool Read(PinMaskType pin){return false;}
 					
-				static void Update(DataType mask){}
-				static void Refresh(DataType mask){}
+				static void Update(MaskType mask){}
+				static void Refresh(MaskType mask){}
 					
-				template<uint8_t PIN>
-				static constexpr StaticPin<NullPort, 0> Pin(){return StaticPin<NullPort, 0>();}
+				template<PinNumberType VNumber>
+				static constexpr StaticPin<PortType, VNumber> Pin()
+				{
+					return StaticPin<PortType, VNumber>();
+				}
+					
+				static constexpr DynamicNumberPin<PortType> Pin(PinNumberType number){return DynamicNumberPin<PortType>(number);}
 			};
 			typedef StaticPin<NullPort, 0> NullPin;
 		}
-		static constexpr priv::NullPort NullPort;
-		static constexpr priv::NullPin NullPin;
+		static constexpr types::NullPort NullPort;
+		static constexpr auto NullPin = NullPort.Pin<0>();
 	}
 }
 

@@ -35,9 +35,9 @@ SUBDIRS :=  \
 ../io \
 ../AVR \
 ../common \
-../io/impl \
 ../io/pin \
 ../io/port \
+../io/port/priv \
 ../loki/ \
 ../smcu
 

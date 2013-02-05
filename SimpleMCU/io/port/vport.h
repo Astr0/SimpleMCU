@@ -9,112 +9,120 @@
 #ifndef VPORT_H_
 #define VPORT_H_
 
-#include "port.h"
 #include "../../loki/Typelist.h"
-#include "../../common/util.h"
-#include "../impl/pinlist.h"
-#include "../impl/updatecounter.h"
+#include "priv/pinlist.h"
+#include "../../common/typelist.h"
+#include "../../common/maskutils.h"
+#include "../../common/typeutils.h"
+#include "../updatecounter.h"
+
 
 namespace smcu
 {
 	namespace io
 	{
-		namespace priv
+		namespace types
 		{
-			// VPort - port-like wrapper for Pins
+			// VPort - static port-like wrapper for Pins
 			template<class TPinList>
 			class VPort
 			{
 				private:
 					typedef TPinList Pins;
-					typedef typename Loki::TL::NoDuplicates<typename smcu::io::priv::MakePortList<Pins>::Result>::Result Ports;
-					typedef typename Loki::TL::NoDuplicates<typename smcu::io::priv::MakeControllerList<Ports>::Result>::Result Controllers;
-					static constexpr uint8_t PinCount = smcu::common::TLS::Length<Pins>();
-					static constexpr uint8_t ControllerCount = smcu::common::TLS::Length<Controllers>();
+					typedef typename Loki::TL::NoDuplicates<typename priv::MakePortList<Pins>::Result>::Result Ports;
+					static constexpr int PinCount = smcu::common::TL::Length<Pins>();
+					
 				public:
 					typedef typename smcu::common::FastDataType<smcu::common::MinSizeInBytes(PinCount)>::Result DataType;
-					typedef NullPortController ControllerType;
 				private:
-					static constexpr DataType Mask = smcu::common::Pow<DataType>(2, PinCount) - 1;
+					typedef smcu::common::BitMaskTypes<DataType> BitMaskTypes;			
+				public:
+					typedef typename BitMaskTypes::OneBitType PinMaskType; 
+					typedef typename BitMaskTypes::BitNumberType PinNumberType;
+					typedef typename BitMaskTypes::MaskType MaskType;					
+				private:
+					static constexpr MaskType Mask = smcu::common::SetBits<MaskType>(PinCount);
+					static constexpr bool AutoUpdated = smcu::common::TL::All<Ports, priv::PortAutoUpdatedPredicate>::value;
 				public:
 					constexpr VPort(){}
 			
-					static constexpr uint8_t Width(){return PinCount;}
+					typedef VPort<TPinList> PortType;
+					
 					static constexpr bool IsStatic(){return true;}
+	
+					static constexpr PinNumberType Width(){return PinCount;}
+					static constexpr bool IsAutoUpdate(){return AutoUpdated;}
 								
-					static constexpr NullPortController* Controller(){return nullptr;}
-							
 					static void Write(DataType value) 
 					{
-						smcu::io::priv::PortListIterator<Ports, Pins, DataType>::Write(value);
-						smcu::io::priv::PortControllerListIterator<Controllers, Pins, DataType>::UpdateAll();
+						priv::PortListIterator<Ports, Pins, DataType>::Write(value);
 					}
-					static void ClearAndSet(DataType clearMask, DataType setMask) 
+					static void ClearAndSet(MaskType clearMask, MaskType setMask) 
 					{
-						smcu::io::priv::PortListIterator<Ports, Pins, DataType>::ClearAndSet(clearMask, setMask);
-						smcu::io::priv::PortControllerListIterator<Controllers, Pins, DataType>::UpdateAffected(clearMask | setMask);
+						priv::PortListIterator<Ports, Pins, DataType>::ClearAndSet(clearMask, setMask);
 					}				
-					static void Set(DataType mask) 
+					static void Set(MaskType mask) 
 					{
-						smcu::io::priv::PortListIterator<Ports, Pins, DataType>::Set(mask);
-						smcu::io::priv::PortControllerListIterator<Controllers, Pins, DataType>::UpdateAffected(mask);
+						priv::PortListIterator<Ports, Pins, DataType>::Set(mask);
 					}
-					static void Clear(DataType mask) 
+					static void Clear(MaskType mask) 
 					{
-						smcu::io::priv::PortListIterator<Ports, Pins, DataType>::Clear(mask);					
-						smcu::io::priv::PortControllerListIterator<Controllers, Pins, DataType>::UpdateAffected(mask);
+						priv::PortListIterator<Ports, Pins, DataType>::Clear(mask);					
 					}
-					static void Toggle(DataType mask) 
+					static void Toggle(MaskType mask) 
 					{
-						smcu::io::priv::PortListIterator<Ports, Pins, DataType>::Toggle(mask);	
-						smcu::io::priv::PortControllerListIterator<Controllers, Pins, DataType>::UpdateAffected(mask);
+						priv::PortListIterator<Ports, Pins, DataType>::Toggle(mask);	
 					}
 					static DataType Read() 
 					{
-						smcu::io::priv::PortControllerListIterator<Controllers, Pins, DataType>::RefreshAll();
-						return smcu::io::priv::PortListIterator<Ports, Pins, DataType>::Read();
+						return priv::PortListIterator<Ports, Pins, DataType>::Read();
 					}
-				
-					static constexpr bool HasControllers(){return ControllerCount != 0;}
-					
-					static void Update(DataType mask)
+					static bool Read(PinMaskType pin)
 					{
-						if (!HasControllers())
+						// TODO: Optimize this
+						return Read() & pin;
+					}
+					
+					static void Update(MaskType mask)
+					{
+						if (AutoUpdated)
 							return;
-						smcu::io::UpdateCounter::Increment();
+						smcu::io::UpdateCounter.Increment();
 						DoUpdate(mask);
 					}
-					static void Refresh(DataType mask)
+					static void Refresh(MaskType mask)
 					{
-						if (!HasControllers())
+						if (AutoUpdated)
 							return;
-						smcu::io::UpdateCounter::Increment();
+						smcu::io::UpdateCounter.Increment();
 						DoRefresh(mask);
 					}		
 				
 				
-					static void DoUpdate(DataType mask)
+					static void DoUpdate(MaskType mask)
 					{
-						if (!HasControllers())
+						if (AutoUpdated)
 							return;
 						if (mask & Mask == Mask)
-							smcu::io::priv::PortControllerListIterator<Controllers, Pins, DataType>::UpdateAll();
+							priv::PortListIterator<Ports, Pins, DataType>::UpdateAll();
 						else
-							smcu::io::priv::PortControllerListIterator<Controllers, Pins, DataType>::UpdateAffected(mask);
+							priv::PortListIterator<Ports, Pins, DataType>::UpdateAffected(mask);
 					}					
 
-					static void DoRefresh(DataType mask)
+					static void DoRefresh(MaskType mask)
 					{
-						if (!HasControllers())
+						if (AutoUpdated)
 							return;
 						if (mask & Mask == Mask)
-							smcu::io::priv::PortControllerListIterator<Controllers, Pins, DataType>::RefreshAll();
+							priv::PortListIterator<Ports, Pins, DataType>::RefreshAll();
 						else
-							smcu::io::priv::PortControllerListIterator<Controllers, Pins, DataType>::RefreshAffected(mask);
+							priv::PortListIterator<Ports, Pins, DataType>::RefreshAffected(mask);
 					}
 					
-					template<uint8_t PIN>
-					static typename Loki::TL::TypeAt<Pins, PIN>::Result* Pin(){return nullptr;}
+					template<PinNumberType VPin>
+					static constexpr typename Loki::TL::TypeAt<Pins, VPin>::Result::Pin Pin(){return typename Loki::TL::TypeAt<Pins, VPin>::Result::Pin();}
+						
+					static constexpr DynamicNumberPin<PortType> Pin(PinNumberType number){return DynamicNumberPin<PortType>(number);}						
 			};
 		}
 	}

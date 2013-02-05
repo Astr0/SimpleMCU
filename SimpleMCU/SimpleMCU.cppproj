@@ -104,9 +104,9 @@
     <Folder Include="io" />
     <Folder Include="AVR" />
     <Folder Include="common" />
-    <Folder Include="io\impl" />
     <Folder Include="io\pin" />
     <Folder Include="io\port" />
+    <Folder Include="io\port\priv" />
     <Folder Include="loki\" />
     <Folder Include="smcu" />
   </ItemGroup>
@@ -117,28 +117,31 @@
     <Compile Include="AVR\io\port_impl.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="common\util.h">
+    <Compile Include="common\maskutils.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="io\impl\dynamicpinlist.h">
+    <Compile Include="common\typelist.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="io\impl\pinlist.h">
+    <Compile Include="common\typeutils.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="io\impl\portcontroller.h">
+    <Compile Include="common\utils.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="io\impl\updatecounter.h">
+    <Compile Include="common\variadic.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="io\pin.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="io\pin\dynamicinvertedpin.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="io\pin\dynamicpin.h">
+    <Compile Include="io\pin\dynamicnumberpin.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="io\pin\pin.h">
+    <Compile Include="io\pin\dynamicpin.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="io\pin\staticinvertedpin.h">
@@ -147,16 +150,31 @@
     <Compile Include="io\pin\staticpin.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="io\port.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="io\port\dynamicvport.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="io\port\portpointer.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="io\port\priv\dynamicpinlist.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="io\port\priv\pinlist.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="io\port\nullport.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="io\port\port.h">
+    <Compile Include="io\port\portbase.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="io\port\vport.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="io\updatecounter.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="loki\NullType.h">

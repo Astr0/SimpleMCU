@@ -11,69 +11,64 @@
 #define DYNAMICINVERTEDPIN_H_
 
 
-
 namespace smcu
 {
 	namespace io
 	{
-		namespace priv
+		namespace types
 		{
-			template<class TPIN>
+			template<class TPin>
 			class DynamicInvertedPin
 			{
-				private:
-				typedef TPIN Pin;
+				typedef TPin Pin;
 				const Pin _pin;
-			
+				static_assert(!Pin::IsInverted(), "Why do you need to invert inverted pin?");
+
 				public:
+				typedef typename Pin::PortType PortType;
+				typedef typename Pin::PinNumberType PinNumberType;
+				typedef typename Pin::PinMaskType PinMaskType;
+				typedef DynamicInvertedPin<Pin> PinType;
+				typedef Pin NotInvertedType;
+
 				constexpr DynamicInvertedPin(const Pin pin)
 					:_pin(pin)
 				{				
 				}
 			
-				typedef typename Pin::PortType PortType;
-				constexpr PortType* Port() {return _pin.Port();}
-				constexpr uint8_t Number() {return _pin.Number();}
 				static constexpr bool IsStatic(){return false;}
-				constexpr bool Inverted(){return !_pin.Inverted();}
-				constexpr typename PortType::DataType Mask() { return _pin.Mask();}
+				static constexpr bool IsInverted(){return !Pin::IsInverted();}
+				
+				inline constexpr PortType Port()const {return _pin.Port();}
+				inline constexpr PinMaskType Mask()const {return _pin.Mask();}
+				inline constexpr PinNumberType Number()const {return _pin.Number();}
+				inline constexpr NotInvertedType NotInverted()const{return _pin;}
 
-				void Set() const
+				inline void Set() const
 				{
 					_pin.Clear();
 				}
 			
-				void Clear() const
+				inline void Clear() const
 				{
 					_pin.Set();
 				}
 			
-				void Set(bool val) const
+				inline void Set(bool val) const
 				{
 					_pin.Set(!val);
 				}
 
-				void Toggle() const
+				inline void Toggle() const
 				{
 					_pin.Toggle();
 				}
 
-				bool Read() const
+				inline bool Read() const
 				{
 					return !_pin.Read();
 				}
-			
-				void Refresh() const
-				{
-					_pin.Refresh();
-				}
-			
-				 void Update() const
-				{
-					_pin.Update();
-				}
-			};
-			
+			};			
 		}
 	}	
 }

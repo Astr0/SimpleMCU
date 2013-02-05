@@ -14,35 +14,39 @@ namespace smcu
 {
 	namespace io
 	{
-		namespace priv
+		namespace types
 		{
-			template<class PORT, uint8_t PIN>
-			class StaticPin;
-		
-			template<class PORT, uint8_t PIN>
+			template<class TPort, typename TPort::PinNumberType VNumber>
 			class StaticPin
 			{
-				static_assert(PIN < PORT::Width(), "Pin number out of range");
+				static_assert(VNumber < TPort::Width(), "Pin number out of range");
 				public:
+				typedef TPort PortType;
+				typedef typename PortType::PinNumberType PinNumberType;
+				typedef typename PortType::PinMaskType PinMaskType;
+				typedef StaticPin<TPort, VNumber> PinType;
+				typedef PinType NotInvertedType;
+
 				constexpr StaticPin()
-				{				
+				{
 				}
-			
-				typedef PORT PortType;
-				static constexpr PortType* Port() {return  nullptr;}
-				static constexpr uint8_t Number() {return PIN;}
+
 				static constexpr bool IsStatic(){return true;}
-				static constexpr bool Inverted(){return false;}
-				static constexpr typename PortType::DataType Mask() {return 1 << PIN;}
+				static constexpr bool IsInverted(){return false;}
+				
+				static constexpr PortType Port() {return PortType();}
+				static constexpr PinMaskType Mask() {return 1 << VNumber;}
+				static constexpr PinNumberType Number() {return VNumber;}
+				static constexpr NotInvertedType NotInverted(){return PinType();}
 
 				static void Set()
 				{
-					Port()->Set(Mask());
+					PortType::Set(Mask());
 				}
 			
 				static void Clear()
 				{
-					Port()->Clear(Mask());
+					PortType::Clear(Mask());
 				}
 			
 				static void Set(bool val)
@@ -55,22 +59,12 @@ namespace smcu
 
 				static void Toggle()
 				{
-					Port()->Toggle(Mask());
+					PortType::Toggle(Mask());
 				}
 
 				static bool Read()
 				{
-					return (Port()->Read() && Mask());
-				}
-			
-				static void Refresh()
-				{
-					Port() -> Refresh(Mask());				
-				}
-			
-				static void Update()
-				{
-					Port() -> Update(Mask());
+					return PortType::Read(Mask());
 				}
 			};
 		}
