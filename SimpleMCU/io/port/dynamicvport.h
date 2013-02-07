@@ -10,9 +10,10 @@
 #ifndef DYNAMICVPORT_H_
 #define DYNAMICVPORT_H_
 
-#include "vport.h"
+#include "staticvport.h"
 #include "priv/dynamicpinlist.h"
 #include "../updatecounter.h"
+#include "portinfo.h"
 //#include "portpointer.h"
 
 namespace smcu
@@ -26,15 +27,13 @@ namespace smcu
 			{
 					typedef TPinList Pins;	
 					typedef typename smcu::common::TL::Select<Pins, priv::SelectStaticPinList>::Result StaticPins;
-					typedef VPort<StaticPins> StaticPort;
-				public:
-					typedef DynamicVPort<TPinList> PortType;
-					typedef typename StaticPort::DataType DataType;
-					typedef typename StaticPort::PinMaskType PinMaskType;
-					typedef typename StaticPort::PinNumberType PinNumberType;
-					typedef typename StaticPort::MaskType MaskType;
-					
+					typedef StaticVPort<StaticPins> StaticPort;
 				private:			
+					typedef typename PortInfo<StaticPort>::DataType DataType;
+					typedef typename PortInfo<StaticPort>::PinMaskType PinMaskType;
+					typedef typename PortInfo<StaticPort>::PinNumberType PinNumberType;
+					typedef typename PortInfo<StaticPort>::MaskType MaskType;
+
 					typedef typename smcu::common::TL::Where<Pins, smcu::common::TL::Not<priv::IsStaticPinPredicate>::Result>::Result DynamicPins;
 					typedef priv::DynamicPinWrapper<DataType, DynamicPins> DynamicHeadType;
 					static_assert(Loki::TL::Length<DynamicPins>::value > 0, "Use static VPort for performance!");
@@ -42,18 +41,7 @@ namespace smcu
 					const DynamicHeadType _dynamicPortHead;
 					const bool _autoUpdated;
 				protected:
-					// hide copy constructor - it's too expensive
-					constexpr DynamicVPort(const DynamicVPort<TPinList>& other): _dynamicPortHead(other._dynamicPortHead), _autoUpdated(other._autoUpdated)
-					{
-	
-					}
 				public:
-					// move constructor - it's ok to move rvalue
-					constexpr DynamicVPort(DynamicVPort<TPinList>&& other): _dynamicPortHead(other._dynamicPortHead), _autoUpdated(other._autoUpdated)
-					{
-						
-					}
-
 					template<class ...PINS>
 					constexpr DynamicVPort(const PINS... pins): _dynamicPortHead(pins...), _autoUpdated(priv::IsDynamicAutoUpdate(pins...))
 					{					
@@ -90,7 +78,9 @@ namespace smcu
 					}
 					inline DataType Read()const 
 					{
-						return StaticPort::Read() | _dynamicPortHead.Read();
+						DataType result = StaticPort::Read();
+						_dynamicPortHead.Read(result);
+						return result;
 					}
 					inline bool Read(PinMaskType pin) const
 					{
@@ -150,8 +140,6 @@ namespace smcu
 					{
 						return MakePin<VPin>( PinType<VPin>::Overload);
 					}
-
-					constexpr DynamicPin<PortPointer<const PortType*>> Pin(PinNumberType number){return DynamicPin<PortPointer<const PortType*>>(PortPointer<const PortType*>(this), number);}					
 			};		
 		}
 	}	

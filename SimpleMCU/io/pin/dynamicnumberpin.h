@@ -10,7 +10,7 @@
 #ifndef DYNAMICNUMBERPIN_H_
 #define DYNAMICNUMBERPIN_H_
 
-#include "../../common/maskutils.h"
+#include "../port/portinfo.h"
 
 namespace smcu
 {
@@ -21,37 +21,30 @@ namespace smcu
 			template<class TPort>
 			class DynamicNumberPin
 			{
-				public:
-				typedef TPort PortType;
-				typedef typename PortType::PinNumberType PinNumberType;
-				typedef typename PortType::PinMaskType PinMaskType;
-				typedef DynamicNumberPin<TPort> PinType;
-				typedef PinType NotInvertedType;
-
-				private:
-				const PinMaskType _mask;				
+				typedef PortInfo<TPort> PI;
+				const typename PI::PinMaskType _mask;				
 				
 				public:
-				constexpr DynamicNumberPin(const PinNumberType number): _mask(1 << number)
+				constexpr DynamicNumberPin(const typename PI::PinNumberType number): _mask(PI::GetPinMask(number))
 				{				
 				}
 			
 				static constexpr bool IsStatic(){return false;}
 				static constexpr bool IsInverted(){return false;}
 				
-				static constexpr PortType Port(){return PortType();}
-				inline constexpr PinMaskType Mask()const {return _mask;}
-				inline constexpr PinNumberType Number()const {return smcu::common::MaskToBit<PinNumberType, PinMaskType>(_mask);}
-				inline constexpr NotInvertedType NotInverted()const{return *this;}
+				static constexpr TPort Port(){return TPort();}
+				inline constexpr typename PI::PinMaskType Mask()const {return _mask;}
+				inline constexpr typename PI::PinNumberType Number()const {return PI::GetPinNumber(Mask());}
+				inline constexpr DynamicNumberPin<TPort> NotInverted()const{return *this;}
 
 				inline void Set()const
 				{
-					PortType::Set(Mask());
+					TPort::Set(Mask());
 				}
 			
 				inline void Clear()const
 				{
-					PortType::Clear(Mask());
+					TPort::Clear(Mask());
 				}
 			
 				inline void Set(bool val)const
@@ -64,12 +57,12 @@ namespace smcu
 
 				inline void Toggle()const
 				{
-					PortType::Toggle(Mask());
+					TPort::Toggle(Mask());
 				}
 
 				inline bool Read()const
 				{
-					return PortType::Read(Mask());
+					return TPort::Read(Mask());
 				}
 			};				
 		}

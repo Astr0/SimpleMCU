@@ -12,13 +12,6 @@
 	TODO: UNIT TEST
 	PIN INTERFACE:
 
-	TYPEDEF STUFF:
-		typedef TPort PortType;
-		typedef typename PortType::PinNumberType PinNumberType;
-		typedef typename PortType::PinMaskType PinMaskType;
-		typedef ? PinType; - Pin type itself
-		typedef ? NotInvertedType; - type of not-inverted pin
-		
 	STATIC STUFF:
 		static constexpr bool IsStatic(){return ?;} - is this pin static		
 		static constexpr bool IsInverted(){return ?;} // is this pin inverted
@@ -58,6 +51,7 @@
 		}
 */
 
+#include "pin/pininfo.h"
 #include "pin/staticpin.h"
 #include "pin/dynamicnumberpin.h"
 #include "pin/dynamicpin.h"
@@ -78,7 +72,7 @@ namespace smcu
 			{
 				struct MakeNotInverted
 				{
-					typedef typename TPin::NotInvertedType InvType;
+					typedef typename smcu::io::types::PinInfo<TPin>::NotInvertedType InvType;
 					static constexpr InvType Make(const TPin pin)
 					{
 						return pin.NotInverted();
@@ -108,24 +102,24 @@ namespace smcu
 			};
 			
 			template<class TPort>
-			struct MakeDynamicPin
+			struct MakePin
 			{
-				typedef typename TPort::PinNumberType PinNumberType;
+				typedef typename smcu::io::types::PortInfo<TPort>::PinNumberType PinNumberType;
 				struct MakeStatic
 				{
-					typedef smcu::io::types::DynamicNumberPin<TPort> DynType;
-					static constexpr DynType Make(const TPort port, const PinNumberType number)
+					typedef smcu::io::types::DynamicNumberPin<TPort> PinType;
+					static constexpr PinType Make(const TPort port, const PinNumberType number)
 					{
-						return DynType(number);
+						return PinType(number);
 					}
 				};
 
 				struct MakeDynamic
 				{
-					typedef smcu::io::types::DynamicPin<TPort> DynType;
-					static constexpr DynType Make(const TPort port, const PinNumberType number)
+					typedef smcu::io::types::DynamicPin<TPort> PinType;
+					static constexpr PinType Make(const TPort port, const PinNumberType number)
 					{
-						return DynType(port, number);
+						return PinType(port, number);
 					}
 				};
 				
@@ -140,9 +134,9 @@ namespace smcu
 		}	
 		
 		template<class TPort>
-		constexpr typename priv::MakeDynamicPin<TPort>::Result::DynType MakeDynamicPin(const TPort port, const typename TPort::PinNumberType number)
+		constexpr typename priv::MakePin<TPort>::Result::PinType MakePin(const TPort port, const typename priv::MakePin<TPort>::PinNumberType number)
 		{
-			return priv::MakeDynamicPin<TPort>::Result::Make(port, number);
+			return priv::MakePin<TPort>::Result::Make(port, number);
 		}		
 	}
 }

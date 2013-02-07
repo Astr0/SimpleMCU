@@ -22,30 +22,6 @@ namespace smcu
 			return Loki::IsSameType<T1, T2>::value;
 		}
 		
-		template<int bytes>
-		struct FastDataType;
-		
-		template<>
-		struct FastDataType<1>
-		{
-			typedef uint_fast8_t Result;
-		};
-		template<>
-		struct FastDataType<2>
-		{
-			typedef uint_fast16_t Result;
-		};
-		template<>
-		struct FastDataType<3>
-		{
-			typedef uint_fast32_t Result;
-		};
-		template<>
-		struct FastDataType<4>
-		{
-			typedef uint_fast32_t Result;
-		};
-		
 		// Removes pointer from a type
 		template<class T> struct remove_pointer                    {typedef T type;};
 		template<class T> struct remove_pointer<T*>                {typedef T type;};

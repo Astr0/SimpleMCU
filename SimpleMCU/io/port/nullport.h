@@ -9,7 +9,6 @@
 #ifndef NULLPORT_H_
 #define NULLPORT_H_
 
-#include "portbase.h"
 #include "../pin.h"
 
 namespace smcu
@@ -18,36 +17,42 @@ namespace smcu
 	{
 		namespace types
 		{
-			class NullPort:public PortBase<uint8_t>
+			class NullPort
 			{
 				public:
 				constexpr NullPort(){}
 					
 				typedef NullPort PortType;
+				typedef uint8_t DataType;
 				
 				static constexpr bool IsStatic(){return true;}
 				
-				static constexpr PinNumberType Width(){return 8 * sizeof(DataType);}
+				static constexpr uint8_t Width(){return 8 * sizeof(DataType);}
 				static constexpr bool IsAutoUpdate(){return true;}
 				
-				static void Write(DataType value) {}
-				static void ClearAndSet(MaskType clearMask, MaskType setMask) {}
-				static void Set(MaskType mask) {}
-				static void Clear(MaskType mask) {}
-				static void Toggle(MaskType mask) {}
-				static constexpr DataType Read() {return 0;}
-				static constexpr bool Read(PinMaskType pin){return false;}
+				static void Write(uint8_t value) {}
+				template<class TClear, class TSet>
+				static void ClearAndSet(TClear clearMask, TSet setMask) {}
+				template<class TMask>
+				static void Set(TMask mask) {}
+				template<class TMask>
+				static void Clear(TMask mask) {}
+				template<class TMask>
+				static void Toggle(TMask mask) {}
+				static constexpr uint8_t Read() {return 0;}
+				template<class TMask>
+				static constexpr bool Read(TMask pin){return false;}
 					
-				static void Update(MaskType mask){}
-				static void Refresh(MaskType mask){}
+				template<class TMask>
+				static void Update(TMask mask){}
+				template<class TMask>
+				static void Refresh(TMask mask){}
 					
-				template<PinNumberType VNumber>
+				template<unsigned VNumber>
 				static constexpr StaticPin<PortType, VNumber> Pin()
 				{
 					return StaticPin<PortType, VNumber>();
 				}
-					
-				static constexpr DynamicNumberPin<PortType> Pin(PinNumberType number){return DynamicNumberPin<PortType>(number);}
 			};
 			typedef StaticPin<NullPort, 0> NullPin;
 		}

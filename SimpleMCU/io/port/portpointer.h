@@ -9,6 +9,7 @@
 #define PORTPOINTER_H_
 
 #include "../../common/typeutils.h"
+#include "portinfo.h"
 
 namespace smcu
 {
@@ -22,15 +23,17 @@ namespace smcu
 				typedef TPortPointer PPort;
 				typedef decltype(*smcu::common::declval<PPort>()) RPort; // port reference
 				typedef typename smcu::common::remove_reference<RPort>::type TPort; // port type itself, too bad we don't have std here :(
-				const PPort _port;
+				PPort _port;
 				static_assert(!TPort::IsStatic(), "Don't use for static type instances - copy are almost free...");
-				public:
-				typedef typename TPort::DataType DataType;
-				typedef typename TPort::PinMaskType PinMaskType;
-				typedef typename TPort::PinNumberType PinNumberType;
-				typedef typename TPort::MaskType MaskType;
 				
-				constexpr PortPointer(const PPort port): _port(port)
+				typedef typename PortInfo<TPort>::DataType DataType;
+				typedef typename PortInfo<TPort>::PinMaskType PinMaskType;
+				typedef typename PortInfo<TPort>::PinNumberType PinNumberType;
+				typedef typename PortInfo<TPort>::MaskType MaskType;
+
+				public:
+				
+				PortPointer(PPort port): _port(port)
 				{					
 				}
 					
@@ -38,28 +41,25 @@ namespace smcu
 				
 				static constexpr bool IsStatic(){return false;}
 				
-				constexpr PinNumberType Width(){return _port->Width();}
-				constexpr bool IsAutoUpdate(){return _port->IsAutoUpdate();}
+				inline constexpr PinNumberType Width(){return _port->Width();}
+				inline constexpr bool IsAutoUpdate(){return _port->IsAutoUpdate();}
 				
-				void Write(DataType value)const {_port->Write(value);}
-				void ClearAndSet(MaskType clearMask, MaskType setMask)const {_port->ClearAndSet(clearMask, setMask);}
-				void Set(MaskType mask)const {_port->Set(mask);}
-				void Clear(MaskType mask)const {_port->Clear(mask);}
-				void Toggle(MaskType mask)const {_port->Toggle(mask);}
-				constexpr DataType Read()const {return _port->Read();}
-				constexpr bool Read(PinMaskType pin)const{return _port->Read(pin);}
+				inline void Write(const DataType value)const {_port->Write(value);}
+				inline void ClearAndSet(MaskType clearMask, MaskType setMask)const {_port->ClearAndSet(clearMask, setMask);}
+				inline void Set(MaskType mask)const {_port->Set(mask);}
+				inline void Clear(MaskType mask)const {_port->Clear(mask);}
+				inline void Toggle(MaskType mask)const {_port->Toggle(mask);}
+				inline DataType Read()const {return _port->Read();}
+				inline bool Read(PinMaskType pin)const{return _port->Read(pin);}
 					
-				void Update(MaskType mask)const{_port->Update(mask);}
-				void Refresh(MaskType mask)const{_port->Refresh(mask);}
+				inline void Update(MaskType mask)const{_port->Update(mask);}
+				inline void Refresh(MaskType mask)const{_port->Refresh(mask);}
 					
 				template<PinNumberType VNumber>
-				constexpr decltype(smcu::common::declval<TPort>().template Pin<VNumber>()) Pin()
+				inline constexpr decltype(smcu::common::declval<TPort>().template Pin<VNumber>()) Pin()
 				{
 					return _port->template Pin<VNumber>();
 				}
-					
-				// TODO
-				/*constexpr DynamicNumberPin<PortType> Pin(PinNumberType number)const{return DynamicNumberPin<PortType>(number);}	*/
 			};
 		}
 		// TODO: MakePortPointer(Port)
@@ -75,7 +75,7 @@ namespace smcu
 				struct MakeStatic
 				{
 					typedef TPort Result;
-					static constexpr Result Make(const PPort port)
+					static constexpr Result Make(PPort port)
 					{
 						return Result();						
 					}
@@ -83,7 +83,7 @@ namespace smcu
 				struct MakeDynamic
 				{
 					typedef smcu::io::types::PortPointer<PPort> Result;					
-					static constexpr Result Make(const PPort port)
+					static Result Make(PPort port)
 					{
 						return Result(port);
 					}
@@ -93,7 +93,7 @@ namespace smcu
 			};		
 		}		
 		template<class PPort>
-		constexpr typename priv::MakePortPointer<PPort>::MakeType::Result MakePortPointer(const PPort port)
+		constexpr typename priv::MakePortPointer<PPort>::MakeType::Result MakePortPointer(PPort port)
 		{
 			return priv::MakePortPointer<PPort>::MakeType::Make(port);
 		}

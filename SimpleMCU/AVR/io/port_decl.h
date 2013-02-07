@@ -67,7 +67,6 @@ namespace smcu
 		#ifdef PORTH
 		SMCU_DECLAREPORT(H)
 		#endif
-
 	}
 }			
 

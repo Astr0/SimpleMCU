@@ -13,7 +13,8 @@
 #include "../../../loki/Typelist.h"
 #include "../../../common/typelist.h"
 #include "../../../common/variadic.h"
-#include "pinlist.h"
+#include "staticpinlist.h"
+#include "../../pin/pininfo.h"
 
 namespace smcu
 {
@@ -63,7 +64,7 @@ namespace smcu
 					private:
 					typedef ValueType DataType;
 					typedef smcu::common::BitMaskTypes<DataType> BitMaskTypes;
-					typedef typename BitMaskTypes::OneBitType PinMaskType;
+					typedef typename BitMaskTypes::OneBitMask PinMaskType;
 					typedef typename BitMaskTypes::BitNumberType PinNumberType;
 					typedef typename BitMaskTypes::MaskType MaskType;
 				
@@ -88,9 +89,8 @@ namespace smcu
 						inline void Toggle(MaskType mask) const
 						{
 						}
-						inline DataType Read()const
+						inline void Read(DataType& result)const
 						{
-							return 0;
 						}
 					
 						inline void DoUpdate(MaskType mask) const
@@ -115,18 +115,18 @@ namespace smcu
 					private:
 						typedef ValueType DataType;
 						typedef smcu::common::BitMaskTypes<DataType> BitMaskTypes;
-						typedef typename BitMaskTypes::OneBitType PinMaskType;
+						typedef typename BitMaskTypes::OneBitMask PinMaskType;
 						typedef typename BitMaskTypes::BitNumberType PinNumberType;
 						typedef typename BitMaskTypes::MaskType MaskType;
 					
 					
 						typedef typename Head::Pin PinType;
-						typedef typename PinType::PortType PortType;
+						typedef typename PinInfo<PinType>::PortType PortType;
 					
 						typedef DynamicPinWrapper<ValueType, Tail> NextWrapper;
 					
 						static constexpr PinNumberType Position = Head::Position;
-						static constexpr PinMaskType ValueMask = 1 << Position;
+						static constexpr PinMaskType ValueMask = BitMaskTypes::BitToMask(Position);
 						const PinType _pin;
 						const NextWrapper Next;
 					public:
@@ -139,10 +139,7 @@ namespace smcu
 					
 						inline void Write(DataType value) const
 						{
-							if (value & ValueMask)
-								_pin.Set();
-							else 
-								_pin.Clear();
+							_pin.Set(value & ValueMask);
 							Next.Write(value);
 						}
 						inline void ClearAndSet(MaskType clearMask, MaskType setMask)const
@@ -173,9 +170,11 @@ namespace smcu
 								_pin.Toggle(mask);
 							Next.Toggle(mask);
 						}
-						inline DataType Read()const
+						inline void Read(DataType& result)const
 						{
-							return (_pin.Read() << Position) | Next.Read();
+							if (_pin.Read())
+								result |= ValueMask;
+							Next.Read(result);
 						}
 										
 						inline void DoUpdate(MaskType mask) const

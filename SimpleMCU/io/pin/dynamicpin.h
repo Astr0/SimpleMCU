@@ -21,34 +21,27 @@ namespace smcu
 			class DynamicPin
 			{
 				static_assert(!TPort::IsStatic(), "Use DynamicNumberPin for max performance!");
-				public:
-				typedef TPort PortType;
-				typedef typename PortType::PinNumberType PinNumberType;
-				typedef typename PortType::PinMaskType PinMaskType;
-				typedef DynamicPin<TPort> PinType;
-				typedef PinType NotInvertedType;
-
-				private:
-				const PinMaskType _mask;	
-				const PortType _port;			
+				typedef PortInfo<TPort> PI;
+				const typename PI::PinMaskType _mask;	
+				const TPort _port;			
 
 				public:
-				constexpr DynamicPin(const PortType port, const PinNumberType number):
-					_port(port), _mask(1 << number)
+				constexpr DynamicPin(const TPort port, const typename PI::PinNumberType number):
+					_port(port), _mask(PI::GetPinMask(number))
 				{				
 				}
 			
 				static constexpr bool IsStatic(){return false;}
 				static constexpr bool IsInverted(){return false;}
 				
-				inline constexpr PortType Port()const {return _port;}
-				inline constexpr PinMaskType Mask()const {return _mask;}
-				inline constexpr PinNumberType Number()const {return smcu::common::MaskToBit<PinNumberType, PinMaskType>(_mask);}
-				inline constexpr NotInvertedType NotInverted()const{return *this;}
+				inline constexpr TPort Port()const {return _port;}
+				inline constexpr typename PI::PinMaskType Mask()const {return _mask;}
+				inline constexpr typename PI::PinNumberType Number()const {return PI::GetPinNumber(_mask);}
+				inline constexpr DynamicPin<TPort> NotInverted()const{return *this;}
 
 				inline void Set()const
 				{
-					Port().Set(Mask());
+					_port.Set(_mask);
 				}
 			
 				inline void Clear()const

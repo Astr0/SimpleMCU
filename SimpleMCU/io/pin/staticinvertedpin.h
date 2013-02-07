@@ -9,6 +9,8 @@
 #ifndef STATICINVERTEDPIN_H_
 #define STATICINVERTEDPIN_H_
 
+#include "pininfo.h"
+
 namespace smcu
 {
 	namespace io
@@ -19,50 +21,44 @@ namespace smcu
 			class StaticInvertedPin
 			{
 				static_assert(!TPin::IsInverted(), "Don't invert static inverted pins... This kills compilation time...");
-				typedef TPin Pin;
-			
+				typedef PinInfo<TPin> PI;
 				public:
-				typedef typename Pin::PortType PortType;
-				typedef typename Pin::PinNumberType PinNumberType;
-				typedef typename Pin::PinMaskType PinMaskType;
-				typedef StaticInvertedPin<Pin> PinType;
-				typedef Pin NotInvertedType;
 
 				constexpr StaticInvertedPin()
 				{
 				}
 
 				static constexpr bool IsStatic(){return true;}
-				static constexpr bool IsInverted(){return !Pin::IsInverted();}
+				static constexpr bool IsInverted(){return !TPin::IsInverted();}
 				
-				static constexpr PortType Port() {return Pin::Port();}
-				static constexpr PinMaskType Mask() {return Pin::Mask();}
-				static constexpr PinNumberType Number() {return Pin::Number();}
-				static constexpr NotInvertedType NotInverted(){return Pin();}
+				static constexpr typename PI::PortType Port() {return TPin::Port();}
+				static constexpr typename PI::PinMaskType Mask() {return TPin::Mask();}
+				static constexpr typename PI::PinNumberType Number() {return TPin::Number();}
+				static constexpr typename PI::NotInvertedType NotInverted(){return TPin();}
 
 				static void Set()
 				{
-					Pin::Clear();
+					TPin::Clear();
 				}
 			
 				static void Clear()
 				{
-					Pin::Set();
+					TPin::Set();
 				}
 			
 				static void Set(bool val)
 				{
-					Pin::Set(!val);
+					TPin::Set(!val);
 				}
 
 				static void Toggle()
 				{
-					Pin::Toggle();
+					TPin::Toggle();
 				}
 
 				static bool Read()
 				{
-					return !Pin::Read();
+					return !TPin::Read();
 				}
 			};			
 		}

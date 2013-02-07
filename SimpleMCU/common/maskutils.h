@@ -9,19 +9,15 @@
 #ifndef MASKUTILS_H_
 #define MASKUTILS_H_
 
+#include "../loki/TypeManip.h"
+
 namespace smcu
 {
 	namespace common
 	{
-		template<class NumberType, class MaskType>
-		constexpr NumberType MaskToBit(MaskType value)
+		constexpr unsigned MinSizeInBytes(unsigned sizeInBits)
 		{
-			return (value & 1) ? 0 : (1 + MaskToBit(value >> 1));
-		}
-
-		constexpr int MinSizeInBytes(int sizeInBits)
-		{
-			return sizeInBits <= 8 ? 1 : (1 + MinSizeInBytes(sizeInBits - 8));
+			return sizeInBits == 0 ? 1 : ((sizeInBits / 8)  + ((sizeInBits % 8) ? 1 : 0));
 		}
 		
 		template<class MaskType>
@@ -30,12 +26,49 @@ namespace smcu
 			return count == 0 ? 0 : ((1 << count) | SetBits<MaskType>(count - 1));
 		}
 		
+		template<unsigned int N>
+		struct NumberType
+		{
+			typedef typename Loki::Select<(N <= 256), uint_fast8_t, typename Loki::Select<(N <= 65536), uint_fast16_t, uint_fast32_t>::Result>::Result Result;			
+		};
+		
+		template<unsigned bytes>
+		struct BitMaskType;
+		
+		template<>
+		struct BitMaskType<1>
+		{
+			typedef uint_fast8_t Result;
+		};
+		template<>
+		struct BitMaskType<2>
+		{
+			typedef uint_fast16_t Result;
+		};
+		template<>
+		struct BitMaskType<3>
+		{
+			typedef uint_fast32_t Result;
+		};
+		template<>
+		struct BitMaskType<4>
+		{
+			typedef uint_fast32_t Result;
+		};		
+		
+		
 		template<class DataType>
 		struct BitMaskTypes
 		{
-			typedef DataType OneBitType;
+			typedef DataType OneBitMask;
 			typedef DataType MaskType;
-			typedef uint_fast8_t BitNumberType;
+			typedef typename NumberType<sizeof(DataType) * 8>::Result BitNumberType;
+			static constexpr bool OnlyBitInterface = false;
+			static constexpr OneBitMask BitToMask(BitNumberType num){return OneBitMask(1) << num; }
+			static constexpr BitNumberType MaskToBit(OneBitMask value)
+			{
+				return (value & 1) ? 0 : (1 + MaskToBit(value >> 1));
+			}
 		};
 		
 		template<int VBytesToLeft>
@@ -49,9 +82,23 @@ namespace smcu
 			}
 		};
 
+		template<class T>
+		constexpr T Or(const T& a, const T& b)
+		{
+			return a | b;
+		}
+
+		template<class T>
+		constexpr T And(const T& a, const T& b)
+		{
+			return a & b;
+		}
+		template<class T>
+		constexpr T Xor(const T& a, const T& b)
+		{
+			return a ^ b;
+		}
 	}
 }
-
-
 
 #endif /* MASKUTILS_H_ */

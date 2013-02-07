@@ -10,7 +10,6 @@
 #ifndef PORT_IMPL_H_
 #define PORT_IMPL_H_
 
-#include "../../io/port/portbase.h"
 #include "../../io/pin.h"
 
 namespace smcu
@@ -20,36 +19,32 @@ namespace smcu
 		namespace types
 		{
 			template<class DDRREG, class PORTREG, class PINREG>
-			class AVRPort: public PortBase<uint8_t>
+			class AVRPort
 			{
 				public:
 				constexpr AVRPort(){}
 				
-				typedef AVRPort<DDRREG, PORTREG, PINREG> PortType;
-								
 				static constexpr bool IsStatic(){return true;}
 					
-				static constexpr PinNumberType Width(){return 8 * sizeof(DataType);}			
+				static constexpr uint8_t Width(){return 8;}			
 				static constexpr bool IsAutoUpdate(){return true;}
 			
-				inline static void Write(DataType value) {PORTREG::value() = value;}
-				inline static void ClearAndSet(MaskType clearMask, MaskType setMask) {PORTREG::value() = PORTREG::value() & ~clearMask | setMask;}
-				inline static void Set(MaskType mask) {PORTREG::value() |= mask;}
-				inline static void Clear(MaskType mask) {PORTREG::value() &= ~mask;}
-				inline static void Toggle(MaskType mask) {PORTREG::value() ^= mask;}
-				inline static DataType Read() {return PINREG::value();}
-				inline static bool Read(PinMaskType mask){return Read() & mask;}
+				inline static void Write(uint8_t value) {PORTREG::value() = value;}
+				inline static void ClearAndSet(uint8_t clearMask, uint8_t setMask) {PORTREG::value() = PORTREG::value() & ~clearMask | setMask;}
+				inline static void Set(uint8_t mask) {PORTREG::value() |= mask;}
+				inline static void Clear(uint8_t mask) {PORTREG::value() &= ~mask;}
+				inline static void Toggle(uint8_t mask) {PORTREG::value() ^= mask;}
+				inline static uint8_t Read() {return PINREG::value();}
+				inline static bool Read(uint8_t mask){return Read() & mask;}
 					
-				inline static void Update(MaskType mask){}
-				inline static void Refresh(MaskType mask){}
+				inline static void Update(uint8_t mask){}
+				inline static void Refresh(uint8_t mask){}
 					
-				template<PinNumberType VNumber>
-				static constexpr StaticPin<PortType, VNumber> Pin()
+				template<unsigned VNumber>
+				static constexpr StaticPin<AVRPort<DDRREG, PORTREG, PINREG>, VNumber> Pin()
 				{
-					return StaticPin<PortType, VNumber>();
+					return StaticPin<AVRPort<DDRREG, PORTREG, PINREG>, VNumber>();
 				}
-				
-				static constexpr DynamicNumberPin<PortType> Pin(PinNumberType number){return DynamicNumberPin<PortType>(number);}
 			};	
 		}
 	}	
