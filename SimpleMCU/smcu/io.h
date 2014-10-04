@@ -1,17 +1,15 @@
 /*
  * io.h
  *
- * Created: 03.02.2013 1:21:07
+ * Created: 10/4/2014 4:28:20 PM
  *  Author: astr0
  */ 
 
-#pragma once
 
 #ifndef IO_H_
 #define IO_H_
 
-#include "../io/port.h"
-//#include "../io/pin/pin.h"
-
+#include <io/pins.h>
+#include <io/ports.h>
 
 #endif /* IO_H_ */

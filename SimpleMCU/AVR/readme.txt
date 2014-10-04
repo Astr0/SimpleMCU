@@ -1,0 +1,1 @@
+AVR specific stuff will be here. Include this folder for the whole library to work fine

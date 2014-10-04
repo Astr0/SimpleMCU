@@ -32,11 +32,14 @@ LIB_DEP:=
 
 # Every subdirectory with source files must be described here
 SUBDIRS :=  \
-../avr/io \
-../loki/ \
+../AVR/io \
 ../io \
-../avr \
+../AVR \
 ../common \
+../io/pin \
+../io/port \
+../io/port/priv \
+../loki/ \
 ../smcu
 
 
@@ -58,9 +61,9 @@ C_DEPS +=
 
 C_DEPS_AS_ARGS += 
 
-OUTPUT_FILE_PATH +=libSimpleMCU.a
+OUTPUT_FILE_PATH +=libSimpleMCU_Old.a
 
-OUTPUT_FILE_PATH_AS_ARGS +=libSimpleMCU.a
+OUTPUT_FILE_PATH_AS_ARGS +=libSimpleMCU_Old.a
 
 ADDITIONAL_DEPENDENCIES:=
 
@@ -108,5 +111,5 @@ $(OUTPUT_FILE_PATH): $(OBJS) $(USER_OBJS) $(OUTPUT_FILE_DEP)
 clean:
 	-$(RM) $(OBJS_AS_ARGS) $(EXECUTABLES)  
 	-$(RM) $(C_DEPS_AS_ARGS)   
-	rm -rf "libSimpleMCU.elf" "libSimpleMCU.a" "libSimpleMCU.hex" "libSimpleMCU.lss" "libSimpleMCU.eep" "libSimpleMCU.map" "libSimpleMCU.srec" "libSimpleMCU.usersignatures"
+	rm -rf "libSimpleMCU_Old.elf" "libSimpleMCU_Old.a" "libSimpleMCU_Old.hex" "libSimpleMCU_Old.lss" "libSimpleMCU_Old.eep" "libSimpleMCU_Old.map" "libSimpleMCU_Old.srec" "libSimpleMCU_Old.usersignatures"
 	
